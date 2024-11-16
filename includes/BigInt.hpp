@@ -60,6 +60,22 @@ class BigInt
         else return false;
     }
 
+    const int8_t operator | (const BigInt& other)
+    {
+        if (len == other.len)
+        {
+            for (int i = len - 1; i >= 0; i--)
+            {
+                if (num[i] == other.num[i]) continue;
+                if (num[i] > other.num[i]) return 1;
+                else return -1;
+            }
+            return 0;
+        }
+        else if (len > other.len) return 1;
+        else return -1;
+    }
+
     const std::strong_ordering operator <=> (const BigInt& other)
     {
         if (len == other.len)
@@ -151,79 +167,85 @@ class BigInt
         if (is_negative && subtrahend.is_negative) return BigInt{ '+', subtrahend.num } - BigInt{ '+', num };
         if (!is_negative && subtrahend.is_negative) return *this + subtrahend;
         if (is_negative && !subtrahend.is_negative) return BigInt{ '-', BigInt{ '+', num } + subtrahend };
-        if (*this == subtrahend) return BigInt{ 0 };
         BigInt temp;
-        if (*this > subtrahend)
+        switch (*this | subtrahend)
         {
-            temp = *this;
-            temp.is_negative = false;
-            bool borrow = false;
-            int i = 0;
-            while (i < subtrahend.len)
+            case 0:
+                break;
+            case 1:
             {
-                if (borrow) temp.num[i] -= subtrahend.num[i] + 1;
-                else temp.num[i] -= subtrahend.num[i];
-                if (temp.num[i] < 0)
+                temp = *this;
+                temp.is_negative = false;
+                bool borrow = false;
+                int i = 0;
+                while (i < subtrahend.len)
                 {
-                    borrow = true;
-                    temp.num[i] += 10;
+                    if (borrow) temp.num[i] -= subtrahend.num[i] + 1;
+                    else temp.num[i] -= subtrahend.num[i];
+                    if (temp.num[i] < 0)
+                    {
+                        borrow = true;
+                        temp.num[i] += 10;
+                    }
+                    else borrow = false;
+                    i++;
                 }
-                else borrow = false;
-                i++;
-            }
-            while (borrow)
-            {
-                temp.num[i] -= 1;
-                if (temp.num[i] < 0)
+                while (borrow)
                 {
-                    borrow = true;
-                    temp.num[i] += 10;
+                    temp.num[i] -= 1;
+                    if (temp.num[i] < 0)
+                    {
+                        borrow = true;
+                        temp.num[i] += 10;
+                    }
+                    else borrow = false;
+                    i++;
                 }
-                else borrow = false;
-                i++;
-            }
-            for (int i = temp.len - 1; i >= 0; i--) // 去除头部0
-            {
-                if (temp.num[i]) break; // 达到有效数字退出
-                temp.num.pop_back ();
-            }
-            temp.len = temp.num.size ();
-        }
-        else
-        {
-            temp = subtrahend;
-            temp.is_negative = true;
-            bool borrow = false;
-            int i = 0;
-            while (i < len)
-            {
-                if (borrow) temp.num[i] -= num[i] + 1;
-                else temp.num[i] -= num[i];
-                if (temp.num[i] < 0)
+                for (int i = temp.len - 1; i >= 0; i--) // 去除头部0
                 {
-                    borrow = true;
-                    temp.num[i] += 10;
+                    if (temp.num[i]) break; // 达到有效数字退出
+                    temp.num.pop_back ();
                 }
-                else borrow = false;
-                i++;
+                temp.len = temp.num.size ();
+                break;
             }
-            while (borrow)
+            case -1:
             {
-                temp.num[i] -= 1;
-                if (temp.num[i] < 0)
+                temp = subtrahend;
+                temp.is_negative = true;
+                bool borrow = false;
+                int i = 0;
+                while (i < len)
                 {
-                    borrow = true;
-                    temp.num[i] += 10;
+                    if (borrow) temp.num[i] -= num[i] + 1;
+                    else temp.num[i] -= num[i];
+                    if (temp.num[i] < 0)
+                    {
+                        borrow = true;
+                        temp.num[i] += 10;
+                    }
+                    else borrow = false;
+                    i++;
                 }
-                else borrow = false;
-                i++;
+                while (borrow)
+                {
+                    temp.num[i] -= 1;
+                    if (temp.num[i] < 0)
+                    {
+                        borrow = true;
+                        temp.num[i] += 10;
+                    }
+                    else borrow = false;
+                    i++;
+                }
+                for (int i = temp.len - 1; i >= 0; i--) // 去除头部0
+                {
+                    if (temp.num[i]) break; // 达到有效数字退出
+                    temp.num.pop_back ();
+                }
+                temp.len = temp.num.size ();
+                break;
             }
-            for (int i = temp.len - 1; i >= 0; i--) // 去除头部0
-            {
-                if (temp.num[i]) break; // 达到有效数字退出
-                temp.num.pop_back ();
-            }
-            temp.len = temp.num.size ();
         }
         return temp;
     }
