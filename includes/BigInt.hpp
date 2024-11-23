@@ -1,40 +1,17 @@
-# ifndef BIGINT_HPP
-# define BIGINT_HPP
-
 #include <iostream>
 #include <vector>
-#include <algorithm>
 
 class BigInt
 {
     public:
+
     int len;
     bool is_negative;
     std::vector<int> num;
 
-    BigInt ()
-    {
-        len = 0;
-        is_negative = false;
-        num.clear ();
-    }
-    BigInt (int value)
-    {
-        if (value < 0) is_negative = true, value *= -1;
-        else is_negative = false;
-        while (value > 0)
-        {
-            num.push_back (value % 10);
-            value /= 10;
-        }
-        len = num.size ();
-    }
-
-    // BigInt (std::string str)
-    // {
-    //     num.clear ();
-    //     len = 0;
-    // }
+    BigInt ();
+    BigInt (int value);
+    BigInt (std::string str);
 
     BigInt (const char& _is_negative, const std::vector<int>& _num)
     {
@@ -50,232 +27,18 @@ class BigInt
         len = bigint.len;
     }
 
-    const bool operator == (const BigInt& other)
-    {
-        if (len == other.len)
-        {
-            for (int i = len - 1; i >= 0; i--) if (num[i] != other.num[i]) return false;
-            return true;
-        }
-        else return false;
-    }
+    const unsigned char operator | (const BigInt& other);
+    const bool operator == (const BigInt& other);
+    const std::strong_ordering operator <=> (const BigInt& other);
 
-    const int8_t operator | (const BigInt& other)
-    {
-        if (len == other.len)
-        {
-            for (int i = len - 1; i >= 0; i--)
-            {
-                if (num[i] == other.num[i]) continue;
-                if (num[i] > other.num[i]) return 1;
-                else return -1;
-            }
-            return 0;
-        }
-        else if (len > other.len) return 1;
-        else return -1;
-    }
+    BigInt operator + (const BigInt& addend);
+    BigInt& operator += (const BigInt& addend);
 
-    const std::strong_ordering operator <=> (const BigInt& other)
-    {
-        if (len == other.len)
-        {
-            for (int i = len - 1; i >= 0; i--)
-            {
-                if (num[i] == other.num[i]) continue;
-                if (num[i] > other.num[i]) return std::strong_ordering::greater;
-                else return std::strong_ordering::less;
-            }
-            return std::strong_ordering::equal;
-        }
-        else if (len > other.len) return std::strong_ordering::greater;
-        else return std::strong_ordering::less;
-    }
+    BigInt operator - (const BigInt& subtrahend);
 
-    BigInt operator + (const BigInt& addend)
-    {
-        BigInt temp = *this;
-        if (temp.len < addend.len) temp.num.resize (addend.len);
-        bool carry = false;
-        for (int i = 0; i < addend.len; i++)
-        {
-            if (carry) temp.num[i] += addend.num[i] + 1;
-            else temp.num[i] += addend.num[i];
-            if (temp.num[i] > 9)
-            {
-                carry = true;
-                temp.num[i] -= 10;
-            }
-            else carry = false;
-        }
-        if (carry)
-        {
-            if (addend.len >= temp.len) temp.num.push_back (1);
-            else
-            {
-                for (int now = addend.len; now < temp.num.size (); now++)
-                {
-                    temp.num[now] += 1;
-                    if (temp.num[now] > 9)
-                    {
-                        temp.num.push_back (1);
-                        temp.num[now] -= 10;
-                    }
-                    else break;
-                }
-            }
-        }
-        temp.len = temp.num.size ();
-        return temp;
-    }
+    BigInt operator * (const BigInt& multiplier);
 
-    BigInt& operator += (const BigInt& addend)
-    {
-        if (len < addend.len) num.resize (addend.len);
-        bool carry = false;
-        for (int i = 0; i < addend.len; i++)
-        {
-            if (carry) num[i] += addend.num[i] + 1;
-            else num[i] += addend.num[i];
-            if (num[i] > 9)
-            {
-                carry = true;
-                num[i] -= 10;
-            }
-            else carry = false;
-        }
-        if (carry)
-        {
-            if (addend.len >= len) num.push_back (1);
-            else
-            {
-                for (int now = addend.len; now < num.size (); now++)
-                {
-                    num[now] += 1;
-                    if (num[now] > 9) num[now] -= 10;
-                    else break;
-                }
-                if (carry) num.push_back (1);
-            }
-        }
-        len = num.size ();
-        return *this;
-    }
-
-    BigInt operator - (const BigInt& subtrahend)
-    {
-        if (is_negative && subtrahend.is_negative) return BigInt {'+', subtrahend.num} - BigInt {'+', num};
-        if (!is_negative && subtrahend.is_negative) return *this + subtrahend;
-        if (is_negative && !subtrahend.is_negative) return BigInt {'-', BigInt {'+', num} + subtrahend};
-        BigInt temp;
-        switch (*this | subtrahend)
-        {
-            case 0:
-                break;
-            case 1:
-            {
-                temp = *this;
-                temp.is_negative = false;
-                bool borrow = false;
-                int i = 0;
-                while (i < subtrahend.len)
-                {
-                    if (borrow) temp.num[i] -= subtrahend.num[i] + 1;
-                    else temp.num[i] -= subtrahend.num[i];
-                    if (temp.num[i] < 0)
-                    {
-                        borrow = true;
-                        temp.num[i] += 10;
-                    }
-                    else borrow = false;
-                    i++;
-                }
-                while (borrow)
-                {
-                    temp.num[i] -= 1;
-                    if (temp.num[i] < 0)
-                    {
-                        borrow = true;
-                        temp.num[i] += 10;
-                    }
-                    else borrow = false;
-                    i++;
-                }
-                for (int i = temp.len - 1; i >= 0; i--) // 去除头部0
-                {
-                    if (temp.num[i]) break; // 达到有效数字退出
-                    temp.num.pop_back ();
-                }
-                temp.len = temp.num.size ();
-                break;
-            }
-            case -1:
-            {
-                temp = subtrahend;
-                temp.is_negative = true;
-                bool borrow = false;
-                int i = 0;
-                while (i < len)
-                {
-                    if (borrow) temp.num[i] -= num[i] + 1;
-                    else temp.num[i] -= num[i];
-                    if (temp.num[i] < 0)
-                    {
-                        borrow = true;
-                        temp.num[i] += 10;
-                    }
-                    else borrow = false;
-                    i++;
-                }
-                while (borrow)
-                {
-                    temp.num[i] -= 1;
-                    if (temp.num[i] < 0)
-                    {
-                        borrow = true;
-                        temp.num[i] += 10;
-                    }
-                    else borrow = false;
-                    i++;
-                }
-                for (int i = temp.len - 1; i >= 0; i--) // 去除头部0
-                {
-                    if (temp.num[i]) break; // 达到有效数字退出
-                    temp.num.pop_back ();
-                }
-                temp.len = temp.num.size ();
-                break;
-            }
-        }
-        return temp;
-    }
-
-    BigInt operator * (const BigInt& multiplier)
-    {
-        BigInt temp;
-        temp.is_negative = this->is_negative ^ multiplier.is_negative;
-        temp.len = this->len + multiplier.len;
-        temp.num.resize (temp.len);
-        for (int i = 0; i < this->len; i++) for (int j = 0; j < multiplier.len; j++) temp.num[i + j] += this->num[i] * multiplier.num[j];
-        for (int i = 0, carry = 0; i < temp.len; i++)
-        {
-            temp.num[i] += carry;
-            carry = temp.num[i] / 10;
-            temp.num[i] %= 10;
-        }
-        for (int i = temp.len - 1; i >= 0; i--)
-        {
-            if (temp.num[i]) break;
-            temp.num.pop_back ();
-        }
-        temp.len = temp.num.size ();
-        return temp;
-    }
-
-    BigInt operator / (const BigInt& divide)
-    {
-        return BigInt {114514};
-    }
+    BigInt operator / (const BigInt& divide);
 
     bool output ()
     {
@@ -291,12 +54,12 @@ class BigInt
     }
 };
 
-std::istream& operator >> (std::istream& in, BigInt& bigint) // 重载cin>>运算符
+inline std::istream& operator >> (std::istream& in, BigInt& bigint)
 {
     bigint.num.clear ();
-    bool in_progress = false; // 是否在读取数字的状态
-    char ch; // 临时字符变量
-    while (in.get (ch))// 一个一个一个向后读，不会停止
+    bool in_progress = false; // 是否进入读取数字状态
+    char ch;
+    while (in.get (ch)) // 一个一个一个向后读，不会停止
     {
         if (!in_progress && std::isspace (ch)) continue; // 未读到数字
         if (!in_progress && ch == '-')
@@ -305,23 +68,23 @@ std::istream& operator >> (std::istream& in, BigInt& bigint) // 重载cin>>运�
             bigint.is_negative = true;
             continue;
         }
-        if (std::isdigit (ch)) // 读到数字
+        if (std::isdigit (ch)) // 读数字
         {
             in_progress = true;
             bigint.num.push_back (ch - '0');
         }
         else // 数字结束
         {
-            in.unget ();
+            in.unget (); // 将此字符放回缓冲区
             bigint.len = bigint.num.size ();
-            std::reverse (bigint.num.begin (), bigint.num.end ());//到转乾坤
+            std::reverse (bigint.num.begin (), bigint.num.end ()); // 倒转乾坤
             break;
         }
     }
     return in;
 }
 
-std::ostream& operator << (std::ostream& out, const BigInt& bigint)
+inline std::ostream& operator << (std::ostream& out, const BigInt& bigint)
 {
     if (bigint.len == 0)
     {
@@ -332,5 +95,3 @@ std::ostream& operator << (std::ostream& out, const BigInt& bigint)
     for (int i = bigint.len - 1; i >= 0; i--) std::cout << bigint.num[i];
     return out;
 }
-
-#endif

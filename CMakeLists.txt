@@ -9,4 +9,11 @@ include_directories (./includes)
 
 add_compile_definitions (CMAKE)
 
-add_executable (BigInt ./src/main.cpp)
+# add_executable (BigInt ./src/main.cpp)
+add_executable (
+    BigInt
+    "./src/main.cpp"
+    "./tools/algorithm.cpp"
+    "./tools/compare.cpp"
+    "./tools/initialize.cpp"
+)
