@@ -1,6 +1,6 @@
 #include "BigInt.hpp"
 
-BigInt BigInt::operator + (const BigInt& addend)
+const BigInt BigInt::operator + (const BigInt& addend) const
 {
     BigInt temp = *this;
     if (temp.len < addend.len) temp.num.resize (addend.len);
@@ -39,42 +39,15 @@ BigInt BigInt::operator + (const BigInt& addend)
 
 BigInt& BigInt::operator += (const BigInt& addend)
 {
-    if (len < addend.len) num.resize (addend.len);
-    bool carry = false;
-    for (int i = 0; i < addend.len; i++)
-    {
-        if (carry) num[i] += addend.num[i] + 1;
-        else num[i] += addend.num[i];
-        if (num[i] > 9)
-        {
-            carry = true;
-            num[i] -= 10;
-        }
-        else carry = false;
-    }
-    if (carry)
-    {
-        if (addend.len >= len) num.push_back (1);
-        else
-        {
-            for (int now = addend.len; now < num.size (); now++)
-            {
-                num[now] += 1;
-                if (num[now] > 9) num[now] -= 10;
-                else break;
-            }
-            if (carry) num.push_back (1);
-        }
-    }
-    len = num.size ();
+    *this = *this + addend;
     return *this;
 }
 
-BigInt BigInt::operator - (const BigInt& subtrahend)
+const BigInt BigInt::operator - (const BigInt& subtrahend) const
 {
-    if (is_negative && subtrahend.is_negative) return BigInt {'+', subtrahend.num} - BigInt {'+', num};
-    if (!is_negative && subtrahend.is_negative) return *this + subtrahend;
-    if (is_negative && !subtrahend.is_negative) return BigInt {'-', BigInt {'+', num} + subtrahend};
+    if (this->is_negative && subtrahend.is_negative) return subtrahend * -1 - *this * -1;
+    if (!this->is_negative && subtrahend.is_negative) return *this + subtrahend;
+    if (this->is_negative && !subtrahend.is_negative) return (*this * -1 + subtrahend * -1) * -1;
     BigInt temp;
     switch (*this | subtrahend)
     {
@@ -123,10 +96,10 @@ BigInt BigInt::operator - (const BigInt& subtrahend)
             temp.is_negative = true;
             bool borrow = false;
             int i = 0;
-            while (i < len)
+            while (i < this->len)
             {
-                if (borrow) temp.num[i] -= num[i] + 1;
-                else temp.num[i] -= num[i];
+                if (borrow) temp.num[i] -= this->num[i] + 1;
+                else temp.num[i] -= this->num[i];
                 if (temp.num[i] < 0)
                 {
                     borrow = true;
@@ -158,7 +131,32 @@ BigInt BigInt::operator - (const BigInt& subtrahend)
     return temp;
 }
 
-BigInt BigInt::operator * (const BigInt& multiplier)
+BigInt& BigInt::operator -= (const BigInt& subtrahend)
+{
+    *this = *this - subtrahend;
+    return *this;
+}
+
+const BigInt BigInt::operator * (const int& multiplier) const
+{
+    switch (multiplier)
+    {
+        case 0:
+            return BigInt {0};
+        case 1:
+            return *this;
+        case -1:
+        {
+            BigInt temp = *this;
+            temp.is_negative ^= true;
+            return temp;
+        }
+        default:
+            return *this * BigInt {multiplier};
+    }
+}
+
+const BigInt BigInt::operator * (const BigInt& multiplier) const
 {
     BigInt temp;
     temp.is_negative = this->is_negative ^ multiplier.is_negative;
@@ -180,8 +178,20 @@ BigInt BigInt::operator * (const BigInt& multiplier)
     return temp;
 }
 
-BigInt BigInt::operator / (const BigInt& divide)
+BigInt& BigInt::operator *= (const BigInt& multiplier)
+{
+    *this = *this * multiplier;
+    return *this;
+}
+
+const BigInt BigInt::operator / (const BigInt& divisor) const
 {
     // unfinished
     return BigInt {114514};
+}
+
+BigInt& BigInt::operator /= (const BigInt& divisor)
+{
+    *this = *this / divisor;
+    return *this;
 }
