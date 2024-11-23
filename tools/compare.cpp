@@ -1,6 +1,6 @@
 #include "BigInt.hpp"
 
-const unsigned char BigInt::operator | (const BigInt& other)
+const unsigned char BigInt::operator | (const BigInt& other) const
 {
     if (len == other.len)
     {
@@ -16,7 +16,7 @@ const unsigned char BigInt::operator | (const BigInt& other)
     else return 2;
 }
 
-const bool BigInt::operator == (const BigInt& other)
+const bool BigInt::operator == (const BigInt& other) const
 {
     if (len == other.len)
     {
@@ -26,7 +26,7 @@ const bool BigInt::operator == (const BigInt& other)
     else return false;
 }
 
-const std::strong_ordering BigInt::operator <=> (const BigInt& other)
+const std::strong_ordering BigInt::operator <=> (const BigInt& other) const
 {
     if (len == other.len)
     {
