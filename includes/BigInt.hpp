@@ -164,9 +164,9 @@ class BigInt
 
     BigInt operator - (const BigInt& subtrahend)
     {
-        if (is_negative && subtrahend.is_negative) return BigInt{ '+', subtrahend.num } - BigInt{ '+', num };
+        if (is_negative && subtrahend.is_negative) return BigInt {'+', subtrahend.num} - BigInt {'+', num};
         if (!is_negative && subtrahend.is_negative) return *this + subtrahend;
-        if (is_negative && !subtrahend.is_negative) return BigInt{ '-', BigInt{ '+', num } + subtrahend };
+        if (is_negative && !subtrahend.is_negative) return BigInt {'-', BigInt {'+', num} + subtrahend};
         BigInt temp;
         switch (*this | subtrahend)
         {
@@ -272,46 +272,10 @@ class BigInt
         return temp;
     }
 
-    // BigInt operator * (const BigInt &multiplier)
-    // {
-    //     BigInt temp = *this;
-    //     BigInt finaltemp;
-    //     temp.num.resize (temp.len + multiplier.len);
-    //     // int arr[temp.len];
-    //     vector<int> arr (temp.len);
-    //     for (int i = 0; i < multiplier.len; i++)
-    //     {
-    //         for (int j = 0; j < temp.len; j++)
-    //         {
-    //             temp.num[j+i] = multiplier.num[i] * num[j];
-    //             if (temp.num[j+i] > 9)
-    //             {
-    //                 temp.num[j+i] = temp.num[j+i] - temp.num[j+i]/10*10;
-    //                 temp.num[j+1+i] = temp.num[j+1+i] + (temp.num[j+i]/10);
-    //             }
-    //             for (int i = 0; i < temp.len; i++)
-    //             {
-    //                 finaltemp.num[i] = arr[i] + temp.num[i];
-    //                 if (finaltemp.num[i] > 9)
-    //                 {
-    //                     finaltemp.num[i+1] += 1;
-    //                     finaltemp.num[i] -= 10;
-    //                 }
-    //                 temp.num[i] = 0;
-    //             }
-    //         }
-    //     }
-    //     for (int i = finaltemp.len - 1; i >= 0; i--) // 去除头部0
-    //         {
-    //             if (finaltemp.num[i]) break; // 达到有效数字退出
-    //             finaltemp.num.pop_back ();
-    //         }
-    //     return finaltemp;
-    // }
-
-    // BigInt operator / (const BigInt &divide)
-    // {
-    // }
+    BigInt operator / (const BigInt& divide)
+    {
+        return BigInt {114514};
+    }
 
     bool output ()
     {
@@ -334,10 +298,7 @@ std::istream& operator >> (std::istream& in, BigInt& bigint) // 重载cin>>运�
     char ch; // 临时字符变量
     while (in.get (ch))// 一个一个一个向后读，不会停止
     {
-        if (!in_progress && std::isspace (ch)) // 未读到数字
-        {
-            continue;
-        }
+        if (!in_progress && std::isspace (ch)) continue; // 未读到数字
         if (!in_progress && ch == '-')
         {
             in_progress = true;
